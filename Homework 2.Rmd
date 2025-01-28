@@ -1,0 +1,245 @@
+---
+title: "SDS 315 Homework 2"
+author:
+- "Betsy Sherhart"
+- "UT EID: eas5778"
+date: "January 28, 2025"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#call tidyverse library
+library(tidyverse)
+```
+
+# Problem 1: Beauty, or not, in the classroom 
+
+```{r, echo=FALSE, message=FALSE}
+#import data profs.csv
+profs <- read_csv('profs.csv')
+```
+
+## Part A
+
+```{r, echo=FALSE, message=FALSE}
+#create histogram of course evaluation scores (eval)
+
+ggplot(profs) + 
+  geom_histogram(aes(x=eval)) +
+  labs(x= "Course evaluation score",
+       title = "Distribution of course evaluation scores")
+```
+
+## Part B
+
+```{r, echo=FALSE, message=FALSE}
+#create boxplot of eval whether native speaker or not
+
+ggplot(profs) + 
+  geom_boxplot(aes(x=native, y=eval)) +
+  labs(x="Native Speker",
+       y="Course evaluation score",
+       title="Course evaluation scores for native and non-native english speakers")
+```
+
+## Part C
+
+```{r, echo=FALSE, message=FALSE}
+#create histogram of eval faceted by gender
+
+ggplot(profs) +
+  geom_histogram(aes(x=eval)) +
+  facet_wrap(~gender, nrow=2) +
+  labs(x="Course evaluation score",
+       title="Distribution of evaluation scores by gender")
+```
+
+## Part D
+
+```{r, echo=FALSE, message=FALSE}
+#scatterplot of beauty and eval
+
+ggplot(profs) +
+  geom_point(aes(x=beauty, y=eval)) +
+  labs(x="Professor's physical attractiveness",
+       y="Course evaluation score",
+       title="Correlation professor's physical attractiveness and course evaluation score")
+```
+
+# Problem 2: bike sharing
+
+```{r, echo=FALSE, message=FALSE}
+#import data bikeshare.csv
+bikeshare <- read_csv('bikeshare.csv')
+```
+
+## Part A
+
+```{r, echo=FALSE, message=FALSE}
+#group by hours then use summarize a mean to find average bike rentals by hr
+average_rentals = bikeshare %>%
+  group_by(hr) %>% 
+  summarize(avg_hourly_rentals = mean(total))
+
+#create line graph of avg_hourly_rentals by hr
+ggplot(average_rentals) +
+  geom_line(aes(x=hr, y=avg_hourly_rentals)) +
+  labs(x="Hour",
+       y="Average hourly bike rentals",
+       title="Average hourly bike rentals across hours of the day")
+```
+
+## Part B
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#group by hours and workingday then use summarize a mean to find average bike rentals by hr
+avg_workingday = bikeshare %>%
+  group_by(hr, workingday) %>% 
+  summarize(avg_hourly_rentals = mean(total),
+            workingday = workingday)
+
+#change labels for working day variable
+avg_workingday$workingday <- factor(avg_workingday$workingday, labels=c('Non-Work day','Work day'))
+
+#create line graph of avg_hourly_rentals by hr faceted by workingday
+ggplot(avg_workingday) +
+  geom_line(aes(x=hr, y=avg_hourly_rentals)) +
+  labs(x="Hour",
+       y="Average hourly bike rentals",
+       title="Average hourly bike rentals across hours of the day") +
+  facet_wrap(~workingday)
+```
+
+## Part C
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#filter to hr = 9, group by weathersit and workingday then use summarize a mean to find average bike rentals for groups
+bikeshareC = bikeshare %>% 
+  filter(hr == 9) %>% 
+  group_by(weathersit, workingday) %>% 
+  summarize(avg_ridership = mean(total),
+            workingday = workingday,
+            weathersit = weathersit)
+
+#change labels for working day variable
+bikeshareC$workingday <- factor(bikeshareC$workingday, labels=c('Non-Work day','Work day'))
+
+#change labels for weathersit
+bikeshareC$weathersit <- factor(bikeshareC$weathersit, labels=c('Clear','Misty/Cloudy','Light snow/rain'))
+
+#create a bar plot of average ridership for 9 AM hr by weathersit facted by workingday
+ggplot(bikeshareC) +
+  geom_col(aes(x=weathersit, y=avg_ridership)) +
+  labs(x='Weather situation',
+       y='Average ridership',
+       title='Average ridership during the 9 AM hour based on weather situation') +
+  facet_wrap(~workingday)
+
+```
+
+# Problem 3: Capital Metro UT Ridership
+
+```{r, echo=FALSE, message=FALSE}
+#import dataset capmetro_UT.csv
+capmetro_UT <- read_csv('capmetro_UT.csv')
+
+# Recode the categorical variables in sensible, rather than alphabetical, order
+capmetro_UT = mutate(capmetro_UT,
+day_of_week = factor(day_of_week,
+levels=c("Mon", "Tue", "Wed","Thu", "Fri", "Sat", "Sun")),
+month = factor(month,
+levels=c("Sep", "Oct","Nov")))
+```
+## Question 1
+```{r, echo=FALSE, message=FALSE}
+#group by hour, day, and month then summarize
+capmetro_avg = capmetro_UT %>%
+  group_by(hour_of_day, day_of_week, month) %>%
+  summarize(avg_boarding = mean(boarding))
+
+
+#create line graph of avg_boarding over hours of day by month faceted by day of the week
+ggplot(capmetro_avg) +
+  geom_line(aes(x=hour_of_day, y=avg_boarding, color=month)) +
+  scale_color_brewer(type='qual') +
+  labs(x="hour of the day",
+       y="average boardings",
+       y="Avergae boardings across hours of the day") + 
+  facet_wrap(~day_of_week, nrow=4)
+
+```
+## Question 2
+
+```{r, echo=FALSE, message=FALSE}
+#create scatterplot (boarding vs. temperature)
+ggplot(capmetro_UT) +
+  geom_point(aes(x=temperature, y=boarding, color=weekend)) +
+  scale_color_brewer(type='qual') +
+  labs(x="Temperature (F)",
+       y="Boardings",
+       title="Avergae boardings across hours of the day") + 
+  facet_wrap(~hour_of_day, nrow=4)
+```
+
+# Problem 4: Wrangling the Billboard Top 100
+
+```{r, echo=FALSE, message=FALSE}
+#import data aet
+billboard <- read_csv('billboard.csv')
+```
+
+## Part A
+
+```{r, echo=FALSE, message = FALSE}
+#find the 10 songs that spent the most weeks in billboard top 100
+top_10 = billboard %>%
+  group_by(performer, song) %>% 
+  summarize(count = n()) %>%
+  arrange(desc(count)) %>%
+  head(10)
+
+#print table
+top_10
+```
+
+## Part B
+
+```{r, echo=FALSE, message=FALSE}
+#group by performer, song, year then count observations and filter
+unique_songs = billboard %>% 
+  group_by(performer, song, year) %>%
+  summarize(num_weeks = n()) %>%
+  filter(year > 1958 & year < 2021) %>% 
+  group_by(year) %>% 
+  summarize(songs = n())
+
+#create line graph year by number of unique songs that year
+ggplot(unique_songs) +
+  geom_line(aes(x=year, y=songs)) +
+  labs(x="Year (1959-2020)",
+       y="Number of unique songs on the Billboard Top 100 chart",
+       title="Musical Diversity over the years on the Billboard Top 100 chart")
+```
+
+## Part C
+
+```{r, echo=FALSE, message=FALSE}
+#group by performer and song find count then filter to count of >= than ten then group by artist,find count and filter to >=
+superstars = billboard %>% 
+  group_by(performer, song) %>%
+  summarize(num_weeks = n()) %>%
+  filter(num_weeks >= 10) %>% 
+  group_by(performer) %>% 
+  summarize(num_hits = n()) %>%
+  filter(num_hits >= 30)
+
+#create bar plot of these 19 artists and how many 10-week hits they had
+ggplot(superstars) +
+  geom_col(aes(x=performer, y=num_hits)) + 
+  labs(x="Number of ten-week hits",
+       y="Artist",
+       title="Artists with at least 30 ten-week hits total number of ten-week hits") +
+  coord_flip()
+```
